@@ -1,0 +1,473 @@
+/* ============================================
+   AUTHX — ANIMATIONS.CSS
+   Full cinematic animation system
+   ============================================ */
+
+/* ============================================
+   1. HERO TYPING EFFECT
+   ============================================ */
+.typing-wrap {
+    display: inline-block;
+    position: relative;
+}
+.typing-cursor {
+    display: inline-block;
+    width: 3px;
+    background: var(--purple-light);
+    margin-left: 4px;
+    animation: blinkCursor 0.85s step-end infinite;
+    box-shadow: 0 0 8px var(--purple-light);
+    vertical-align: baseline;
+    height: 0.85em;
+    position: relative; top: 2px;
+}
+@keyframes blinkCursor {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0; }
+}
+
+/* ============================================
+   2. NEON GLOW BORDER — animated cards
+   ============================================ */
+.glow-border {
+    position: relative;
+    z-index: 0;
+}
+.glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        var(--angle, 0deg),
+        var(--purple) 0%,
+        transparent 40%,
+        transparent 60%,
+        var(--purple-light) 100%
+    );
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: rotateBorder 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.4s;
+    z-index: -1;
+}
+.glow-border:hover::before { opacity: 1; }
+
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+@keyframes rotateBorder {
+    to { --angle: 360deg; }
+}
+
+/* ============================================
+   3. SHIMMER SWEEP on pricing cards
+   ============================================ */
+.shimmer {
+    position: relative; overflow: hidden;
+}
+.shimmer::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -75%;
+    width: 50%; height: 200%;
+    background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255,255,255,0.04) 50%,
+        transparent 70%
+    );
+    transform: skewX(-15deg);
+    animation: shimmerPass 3.5s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes shimmerPass {
+    0%   { left: -75%; }
+    100% { left: 125%; }
+}
+
+/* ============================================
+   4. SCROLL REVEAL — multiple variants
+   ============================================ */
+.reveal           { opacity:0; transform:translateY(32px);  transition: opacity .65s ease, transform .65s ease; }
+.reveal-left      { opacity:0; transform:translateX(-40px); transition: opacity .65s ease, transform .65s ease; }
+.reveal-right     { opacity:0; transform:translateX(40px);  transition: opacity .65s ease, transform .65s ease; }
+.reveal-scale     { opacity:0; transform:scale(0.92);       transition: opacity .65s ease, transform .65s ease; }
+.reveal-flip      { opacity:0; transform:rotateX(-20deg) translateY(20px); transition: opacity .7s ease, transform .7s ease; transform-origin: top; }
+
+.reveal.visible,
+.reveal-left.visible,
+.reveal-right.visible,
+.reveal-scale.visible,
+.reveal-flip.visible { opacity:1; transform:none; }
+
+/* Stagger delays */
+.stagger-1 { transition-delay: .08s !important; }
+.stagger-2 { transition-delay: .16s !important; }
+.stagger-3 { transition-delay: .24s !important; }
+.stagger-4 { transition-delay: .32s !important; }
+.stagger-5 { transition-delay: .40s !important; }
+.stagger-6 { transition-delay: .48s !important; }
+
+/* ============================================
+   5. FLOATING BADGE ANIMATIONS
+   ============================================ */
+@keyframes floatUp {
+    0%,100% { transform: translateY(0px) rotate(-1deg); }
+    50%      { transform: translateY(-10px) rotate(1deg); }
+}
+@keyframes floatDown {
+    0%,100% { transform: translateY(0px); }
+    50%      { transform: translateY(8px); }
+}
+.float-anim-1 { animation: floatUp   4s ease-in-out infinite; }
+.float-anim-2 { animation: floatDown 5s ease-in-out infinite; }
+.float-anim-3 { animation: floatUp   6s 1s ease-in-out infinite; }
+
+/* ============================================
+   6. NEON PULSE on buttons
+   ============================================ */
+.btn-primary {
+    animation: btnIdle 4s ease-in-out infinite;
+}
+@keyframes btnIdle {
+    0%,100% { box-shadow: 0 4px 20px rgba(34,197,94,0.3); }
+    50%      { box-shadow: 0 4px 30px rgba(34,197,94,0.55), 0 0 60px rgba(34,197,94,0.12); }
+}
+.btn-primary:hover { animation: none; }
+
+/* ============================================
+   7. HERO TITLE GRADIENT ANIMATION
+   ============================================ */
+.hero-title .purple {
+    background: linear-gradient(90deg,
+        #4ade80 0%,
+        #ffedd5 25%,
+        #22c55e 50%,
+        #16a34a 75%,
+        #4ade80 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s linear infinite;
+}
+@keyframes gradientShift {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+/* ============================================
+   8. STAT CARD NUMBER COUNT-UP FLASH
+   ============================================ */
+@keyframes numberFlash {
+    0%   { color: var(--purple-light); text-shadow: 0 0 20px var(--purple-light); }
+    100% { color: var(--text); text-shadow: none; }
+}
+.count-flash { animation: numberFlash 0.6s ease forwards; }
+
+/* ============================================
+   9. TEAM CARD 3D TILT
+   ============================================ */
+.team-card {
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s;
+}
+/* JS handles the tilt — CSS provides the perspective parent */
+.team-grid { perspective: 1000px; }
+
+/* ============================================
+   10. GLOW SCAN LINE — dashboard preview
+   ============================================ */
+.dashboard-preview {
+    position: relative; overflow: hidden;
+}
+.dashboard-preview::after {
+    content: '';
+    position: absolute;
+    top: -100%; left: 0; right: 0;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(34,197,94,0.04) 50%,
+        transparent 100%
+    );
+    animation: scanLine 5s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes scanLine {
+    0%   { top: -100%; }
+    100% { top: 100%; }
+}
+
+/* ============================================
+   11. FEATURE CARD ICON SPIN ON HOVER
+   ============================================ */
+.feature-card:hover .feature-icon {
+    animation: iconPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes iconPop {
+    0%   { transform: scale(1) rotate(0deg); }
+    50%  { transform: scale(1.25) rotate(-8deg); }
+    100% { transform: scale(1.1) rotate(0deg); }
+}
+.feature-icon { transition: background 0.2s, border-color 0.2s; }
+.feature-card:hover .feature-icon {
+    background: var(--purple-dim);
+    border-color: var(--purple);
+    box-shadow: 0 0 16px rgba(34,197,94,0.3);
+}
+
+/* ============================================
+   12. SECTION HEADER UNDERLINE ANIMATE
+   ============================================ */
+.section-header .section-title {
+    position: relative; display: inline-block;
+}
+
+/* ============================================
+   13. PRICING CARD POPULAR GLOW PULSE
+   ============================================ */
+.card-popular {
+    animation: popularGlow 3s ease-in-out infinite;
+}
+@keyframes popularGlow {
+    0%,100% { box-shadow: 0 0 20px rgba(34,197,94,0.15); }
+    50%      { box-shadow: 0 0 40px rgba(34,197,94,0.3), 0 0 80px rgba(34,197,94,0.08); }
+}
+.card-popular:hover { animation: none; }
+
+/* ============================================
+   14. NAV LINK HOVER UNDERLINE SLIDE
+   ============================================ */
+.nav-link {
+    position: relative;
+}
+.nav-link::after {
+    content: '';
+    position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 2px; border-radius: 99px;
+    background: var(--purple-light);
+    box-shadow: 0 0 8px var(--purple-light);
+    transition: width 0.25s ease;
+}
+.nav-link:hover::after { width: 60%; }
+.nav-link.active::after { width: 60%; }
+
+/* ============================================
+   15. LOGO ICON IDLE PULSE
+   ============================================ */
+.logo-icon {
+    animation: logoPulse 4s ease-in-out infinite;
+}
+@keyframes logoPulse {
+    0%,100% { box-shadow: 0 0 12px rgba(34,197,94,0.4); }
+    50%      { box-shadow: 0 0 24px rgba(34,197,94,0.7), 0 0 48px rgba(34,197,94,0.2); }
+}
+
+/* ============================================
+   16. INFRA / ANALYTICS CARD HOVER LIFT
+   ============================================ */
+.infra-card, .analytics-card {
+    transition: background 0.2s, transform 0.25s ease, box-shadow 0.25s;
+}
+.infra-card:hover, .analytics-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 20px rgba(34,197,94,0.1);
+}
+
+/* ============================================
+   17. STATUS DOT LIVE RIPPLE
+   ============================================ */
+.eyebrow-dot,
+.nav-status::before,
+.dp-live::before {
+    position: relative;
+}
+.eyebrow-dot::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--green);
+    opacity: 0;
+    animation: ripple 2.5s ease-out infinite;
+}
+@keyframes ripple {
+    0%   { opacity: 0.6; transform: scale(0.8); }
+    100% { opacity: 0;   transform: scale(2.2); }
+}
+
+/* ============================================
+   18. HELP BUTTON BOUNCE
+   ============================================ */
+.help-btn {
+    animation: helpBounce 3s ease-in-out infinite;
+}
+@keyframes helpBounce {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+}
+.help-btn:hover { animation: none; transform: translateY(-2px); }
+
+/* ============================================
+   19. GOLD FOUNDER CARD TOP GLOW
+   ============================================ */
+.team-card.tc-gold {
+    animation: goldGlow 3s ease-in-out infinite;
+}
+@keyframes goldGlow {
+    0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.1); }
+    50%      { box-shadow: 0 0 40px rgba(245,158,11,0.25), 0 0 80px rgba(245,158,11,0.06); }
+}
+.team-card.tc-gold:hover { animation: none; }
+
+/* ============================================
+   20. MATRIX / CYBER GRAIN OVERLAY
+   ============================================ */
+body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 9998;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    animation: grainShift 0.2s steps(1) infinite;
+}
+@keyframes grainShift {
+    0%  { background-position: 0 0; }
+    20% { background-position: -50px -100px; }
+    40% { background-position: -100px 50px; }
+    60% { background-position: 80px -80px; }
+    80% { background-position: -30px 120px; }
+}
+
+/* ============================================
+   21. SECTION TAG BADGE GLOW
+   ============================================ */
+.section-tag {
+    animation: tagGlow 4s ease-in-out infinite;
+}
+@keyframes tagGlow {
+    0%,100% { box-shadow: 0 0 0px rgba(34,197,94,0); }
+    50%      { box-shadow: 0 0 14px rgba(34,197,94,0.25); }
+}
+
+/* ============================================
+   22. VISITOR BADGE COUNT PULSE
+   ============================================ */
+.visitor-badge {
+    animation: visitorPulse 5s ease-in-out infinite;
+}
+@keyframes visitorPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.7; }
+}
+
+/* ============================================
+   23. AVATAR RING DUAL SPEED
+   ============================================ */
+.team-avatar-ring.ring-sm  { animation: spinRing 5s linear infinite; }
+.team-avatar-ring.ring-md  { animation: spinRing 8s linear infinite reverse; }
+.team-avatar-ring.ring-lg  { animation: spinRing 6s linear infinite; }
+
+/* ============================================
+   24. PAGE LOAD INTRO — staggered fade
+   ============================================ */
+.navbar    { animation: fadeInDown 0.5s ease both; }
+.hero-eyebrow { animation: fadeInUp 0.6s 0.1s ease both; }
+.hero-title   { animation: fadeInUp 0.6s 0.2s ease both; }
+.hero-desc    { animation: fadeInUp 0.6s 0.3s ease both; }
+.hero-actions { animation: fadeInUp 0.6s 0.35s ease both; }
+.lang-strip   { animation: fadeInUp 0.6s 0.4s ease both; }
+.dashboard-preview { animation: fadeInUp 0.7s 0.5s ease both; }
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   25. NEON LINE BOTTOM on active sidebar link
+   ============================================ */
+.sidebar-link.active {
+    position: relative;
+}
+.sidebar-link.active::before {
+    content: '';
+    position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: var(--purple-light);
+    box-shadow: 0 0 8px var(--purple-light);
+}
+
+/* ============================================
+   26. STAT CARD VALUE GLOW
+   ============================================ */
+.stat-card:hover .stat-value {
+    color: var(--purple-light);
+    text-shadow: 0 0 20px rgba(157,95,245,0.5);
+    transition: color 0.3s, text-shadow 0.3s;
+}
+
+/* ============================================
+   27. HERO SECTION SPOTLIGHT FOLLOW MOUSE
+   ============================================ */
+.hero-spotlight {
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(
+        circle 420px at var(--mx,50%) var(--my,50%),
+        rgba(34,197,94,0.075) 0%,
+        transparent 70%
+    );
+    transition: background 0.1s;
+}
+
+/* ============================================
+   28. SCROLL PROGRESS BAR
+   ============================================ */
+#scrollProgress {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    height: 2.5px; width: 0%;
+    background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80);
+    box-shadow: 0 0 10px #22c55e;
+    transition: width 0.1s linear;
+}
+
+/* ============================================
+   29. DASHBOARD PREVIEW STAT VALUE COUNT
+   ============================================ */
+.dp-stat-val.hl {
+    animation: hlPulse 3s ease-in-out infinite;
+}
+@keyframes hlPulse {
+    0%,100% { text-shadow: 0 0 0px rgba(157,95,245,0); }
+    50%      { text-shadow: 0 0 12px rgba(157,95,245,0.6); }
+}
+
+/* ============================================
+   30. FOOTER STATUS DOTS LIVE
+   ============================================ */
+.footer-status-dot.s-green,
+.footer-status-dot.s-green-2 {
+    animation: dotLive 2s ease-in-out infinite;
+}
+@keyframes dotLive {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.7); }
+}

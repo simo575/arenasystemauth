@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — Arena System | Authentication & Security</title>
+    <meta name="description" content="Arena System — Create your account and secure your software.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/authpage.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+    window.__ENV__ = {
+        SUPABASE_URL:  'https://YOUR_PROJECT.supabase.co',
+        SUPABASE_ANON: 'YOUR_ANON_KEY',
+        API_BASE:      'https://YOUR_PROJECT.supabase.co/functions/v1/api/v1'
+    };
+    </script>
+    <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ap-alert { display:none; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; font-size:.85rem; font-weight:500; margin-top:14px; }
+    .ap-alert.error   { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; }
+    .ap-alert.success { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3);  color:#86efac; }
+    </style>
+</head>
+<body class="authpage-body">
+    <canvas id="stars-canvas" style="position:fixed;inset:0;z-index:0;pointer-events:none"></canvas>
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+    <div class="auth-grid"></div>
+
+    <div id="register-loader" style="position:fixed;inset:0;z-index:9999;background:#09090e;display:none;place-items:center">
+        <div style="text-align:center">
+            <div style="width:56px;height:56px;margin:0 auto;border:3px solid rgba(34,197,94,.15);border-top-color:#22c55e;border-radius:50%;animation:spin .9s linear infinite"></div>
+            <p style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:#4ade80;letter-spacing:.1em">CREATING ACCOUNT…</p>
+        </div>
+    </div>
+
+    <div class="authpage-topbar">
+        Hosting &amp; AntiDDOS by <a href="https://discord.gg/heGNN7Cymz" target="_blank">Arena System</a>
+        &nbsp;·&nbsp; <span style="color:#22c55e;font-weight:700">● 99.99% Uptime</span>
+    </div>
+
+    <nav class="authpage-nav">
+        <a href="/" class="authpage-logo">
+            <div class="logo-icon">AS</div>
+            Arena System
+        </a>
+        <div class="authpage-nav-right">
+            <a href="/" class="ap-nav-link">Landing Page</a>
+            <a href="login.html" class="ap-nav-btn">Sign In</a>
+        </div>
+    </nav>
+
+    <main class="authpage-main">
+        <!-- LEFT PANEL -->
+        <div class="ap-left">
+            <div class="ap-left-inner">
+                <div class="ap-eyebrow">
+                    <span class="ap-eyebrow-dot"></span>
+                    Arena System • AUTH • 2026
+                </div>
+                <div class="ap-welcome-sub">// JOIN THE SQUAD</div>
+                <h1 class="ap-title">
+                    Create your<br>
+                    <span class="ap-title-brand">free account</span>
+                    <span class="ap-wave">🚀</span>
+                </h1>
+                <p class="ap-desc">
+                    Set up your authentication and license management platform in minutes.
+                    No credit card required for the Tester plan.
+                </p>
+                <div class="ap-badges">
+                    <span class="ap-badge"><i class="fas fa-bolt"></i> Instant setup</span>
+                    <span class="ap-badge"><i class="fas fa-lock"></i> Supabase Auth</span>
+                    <span class="ap-badge"><i class="fas fa-key"></i> License keys</span>
+                    <span class="ap-badge"><i class="fas fa-code"></i> REST API</span>
+                </div>
+                <!-- Step indicators -->
+                <div style="display:flex;gap:16px;margin-top:24px">
+                    <div id="step-1-indicator" style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#4ade80;font-family:'JetBrains Mono',monospace">
+                        <span style="width:22px;height:22px;border-radius:50%;background:#22c55e;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem">1</span>
+                        Create Account
+                    </div>
+                    <div id="step-2-indicator" style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#555;font-family:'JetBrains Mono',monospace">
+                        <span style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#888;display:flex;align-items:center;justify-content:center;font-size:.7rem">2</span>
+                        Verify Email
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT FORM -->
+        <div class="ap-right">
+            <div class="ap-card">
+                <div class="ap-float-dots">
+                    <div class="ap-fdot" style="top:10%;left:10%;animation-delay:0s"></div>
+                    <div class="ap-fdot ap-fdot-lg" style="top:22%;right:10%;animation-delay:2s"></div>
+                    <div class="ap-fdot" style="bottom:28%;left:12%;animation-delay:1s"></div>
+                </div>
+
+                <div class="ap-form-header">
+                    <h2>Create Account</h2>
+                    <p>Fill in your details to get started with <span style="color:#4ade80;font-weight:700">Arena System</span>.</p>
+                </div>
+
+                <form id="registerForm" novalidate>
+                    <!-- Name row -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div class="ap-form-group" id="fgFirstname">
+                            <label class="ap-label" for="firstname"><i class="fas fa-user"></i> First Name</label>
+                            <div class="ap-input-wrap">
+                                <input type="text" id="firstname" name="firstname" class="ap-input" placeholder="John" autocomplete="given-name" required>
+                            </div>
+                            <span class="ap-field-error" id="firstnameError"></span>
+                        </div>
+                        <div class="ap-form-group" id="fgLastname">
+                            <label class="ap-label" for="lastname"><i class="fas fa-user"></i> Last Name</label>
+                            <div class="ap-input-wrap">
+                                <input type="text" id="lastname" name="lastname" class="ap-input" placeholder="Doe" autocomplete="family-name" required>
+                            </div>
+                            <span class="ap-field-error" id="lastnameError"></span>
+                        </div>
+                    </div>
+
+                    <div class="ap-form-group" id="fgRegUsername">
+                        <label class="ap-label" for="regUsername"><i class="fas fa-at"></i> Username</label>
+                        <div class="ap-input-wrap">
+                            <input type="text" id="regUsername" name="username" class="ap-input" placeholder="johndoe_x64" autocomplete="username" required>
+                            <span class="input-status"></span>
+                        </div>
+                        <span class="ap-field-error" id="regUsernameError"></span>
+                    </div>
+
+                    <div class="ap-form-group" id="fgRegEmail">
+                        <label class="ap-label" for="regEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                        <div class="ap-input-wrap">
+                            <input type="email" id="regEmail" name="email" class="ap-input" placeholder="your@email.com" autocomplete="email" required>
+                            <span class="input-status"></span>
+                        </div>
+                        <span class="ap-field-error" id="regEmailError"></span>
+                    </div>
+
+                    <div class="ap-form-group" id="fgRegPassword">
+                        <label class="ap-label" for="regPassword"><i class="fas fa-lock"></i> Password</label>
+                        <div class="ap-input-wrap">
+                            <input type="password" id="regPassword" name="password" class="ap-input" placeholder="Min 8 characters" autocomplete="new-password" required>
+                            <button type="button" id="toggleRegPass" class="ap-pw-toggle" tabindex="-1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Strength meter -->
+                        <div style="display:flex;gap:4px;margin-top:6px">
+                            <span id="bar1" class="bar"></span>
+                            <span id="bar2" class="bar"></span>
+                            <span id="bar3" class="bar"></span>
+                            <span id="bar4" class="bar"></span>
+                            <span id="strengthLabel" style="font-size:.7rem;color:#555;margin-left:8px;align-self:center">Enter password</span>
+                        </div>
+                        <span class="ap-field-error" id="regPasswordError"></span>
+                    </div>
+
+                    <div class="ap-form-group" id="fgConfirmPass">
+                        <label class="ap-label" for="confirmPass"><i class="fas fa-lock"></i> Confirm Password</label>
+                        <div class="ap-input-wrap">
+                            <input type="password" id="confirmPass" name="confirmPass" class="ap-input" placeholder="Repeat password" autocomplete="new-password" required>
+                            <button type="button" id="toggleConfirmPass" class="ap-pw-toggle" tabindex="-1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span class="ap-field-error" id="confirmPassError"></span>
+                    </div>
+
+                    <div style="display:flex;align-items:flex-start;gap:10px;margin:14px 0">
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms" style="width:16px;height:16px;margin-top:2px;accent-color:#22c55e">
+                        <label for="agreeTerms" style="font-size:.78rem;color:#888;cursor:pointer">
+                            I agree to the <a href="#" style="color:#4ade80;text-decoration:none">Terms of Service</a>
+                            and <a href="#" style="color:#4ade80;text-decoration:none">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" id="registerBtn" class="ap-submit-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a) !important;color:#ffffff !important;font-weight:800;font-size:1rem;padding:14px;border-radius:10px;box-shadow:0 4px 20px rgba(34,197,94,0.4);border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px">
+                        <span class="btn-text"><i class="fas fa-user-plus"></i> Create Account</span>
+                        <span class="btn-spinner" style="display:none"><i class="fas fa-circle-notch fa-spin"></i></span>
+                    </button>
+                </form>
+
+                <div id="registerAlert" class="ap-alert"></div>
+
+                <div style="margin-top:14px">
+                    <a href="dashboard.html" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#d1d5db;font-size:0.85rem;font-weight:600;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        <i class="fas fa-arrow-right"></i> Continue to Site / Dashboard
+                    </a>
+                </div>
+
+                <div class="ap-card-footer" style="margin-top:16px;text-align:center;color:#8a8aaa;font-size:.8rem">
+                    Already have an account?
+                    <a href="login.html" style="color:#4ade80;text-decoration:none;font-weight:700">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="border-top:1px solid rgba(34,197,94,0.12);padding:18px 36px;text-align:center;color:#44445a;font-size:.78rem;font-family:'JetBrains Mono',monospace;position:relative;z-index:2">
+        © 2026 Arena System. All Rights Reserved. ·
+        <a href="#" style="color:#4ade80;text-decoration:none">Terms</a> ·
+        <a href="#" style="color:#4ade80;text-decoration:none">Privacy</a>
+    </footer>
+
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth-supabase.js"></script>
+    <script src="js/authpage.js"></script>
+    <script>
+    // Strength bar CSS
+    const style = document.createElement('style');
+    style.textContent = '.bar{height:4px;flex:1;border-radius:4px;background:rgba(255,255,255,.08);transition:.3s}.bar.weak{background:#ef4444}.bar.medium{background:#f59e0b}.bar.strong{background:#22c55e}';
+    document.head.appendChild(style);
+    // Stars
+    (function(){const canvas=document.getElementById('stars-canvas');if(!canvas)return;const ctx=canvas.getContext('2d');let stars=[];function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}resize();window.addEventListener('resize',resize,{passive:true});for(let i=0;i<70;i++)stars.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+0.3,alpha:Math.random(),speed:Math.random()*0.015+0.004});function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{s.alpha+=s.speed;if(s.alpha>1||s.alpha<0)s.speed=-s.speed;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(251,146,60,${Math.abs(s.alpha)*0.6})`;ctx.shadowBlur=6;ctx.shadowColor='#22c55e';ctx.fill();});requestAnimationFrame(draw);}draw();})();
+    </script>
+</body>
+</html>

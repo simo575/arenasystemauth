@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Arena System</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- ENV Config: replace with your Supabase project values -->
+    <script>
+    window.__ENV__ = {
+        SUPABASE_URL:  'https://YOUR_PROJECT.supabase.co',
+        SUPABASE_ANON: 'YOUR_ANON_KEY',
+        API_BASE:      'https://YOUR_PROJECT.supabase.co/functions/v1/api/v1'
+    };
+    </script>
+    <style>
+    /* Real apps container */
+    #realAppsContainer { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; padding:20px 0; }
+    .zs-btn-primary { background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;font-size:.82rem;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px; }
+    .zs-btn-primary:hover { opacity:.9;transform:translateY(-1px); }
+    .zs-btn-secondary { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#d1d5db;border-radius:10px;padding:10px 18px;font-weight:600;font-size:.82rem;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px; }
+    .zs-btn-secondary:hover { background:rgba(255,255,255,.1); }
+    /* Modal overlay */
+    .zs-modal-overlay { position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px; }
+    .zs-modal-box { background:#0e0e16;border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:32px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;position:relative; }
+    .zs-modal-input { width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;color:#e5e7eb;font-size:.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;margin-bottom:14px; }
+    .zs-modal-input:focus { border-color:rgba(34,197,94,.5); }
+    .zs-modal-select { width:100%;background:#0e0e16;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;color:#e5e7eb;font-size:.88rem;outline:none;margin-bottom:14px; }
+    /* Licenses table */
+    #licensesTableWrap { overflow-x:auto; }
+    #licensesTable { width:100%;border-collapse:collapse;font-size:.82rem; }
+    #licensesTable th { padding:10px 12px;text-align:left;font-size:.72rem;font-family:'JetBrains Mono',monospace;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,.06); }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+<aside class="sidebar" id="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="fas fa-bolt"></i></div>
+        <div class="sidebar-logo-text">
+            <span class="sidebar-logo-name">Arena System</span>
+            <span class="sidebar-logo-sub">Auth Platform</span>
+        </div>
+        <span class="sidebar-logo-badge">v3.0</span>
+    </div>
+
+    <!-- App Switcher Card (KeyAuth Style) -->
+    <div class="sidebar-app-card" id="sidebarAppCard">
+        <div class="app-card-banner">
+            <div class="app-card-img" style="background: linear-gradient(135deg, #10b981, #059669); font-weight:800; color:#fff; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-cubes"></i>
+            </div>
+            <button class="app-card-menu-btn" onclick="switchPage('manage-apps')" title="Manage Apps">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+        </div>
+        <div class="app-card-info">
+            <span class="app-card-name" id="currentAppName">arena-system</span>
+            <div class="app-card-tags">
+                <span class="app-badge seller-badge" id="sidebarUserRoleBadge">SELLER</span>
+            </div>
+            <span class="app-card-sub" id="sidebarUserRoleSub">Unlimited • Full access</span>
+        </div>
+        <select class="app-card-select" id="appSelectDropdown" aria-label="Select Application">
+            <option value="">Loading apps...</option>
+        </select>
+    </div>
+
+    <div class="sidebar-body">
+
+        <!-- DASHBOARD -->
+        <span class="sidebar-section-label">Dashboard</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link" data-page="overview">
+                <i class="fas fa-grid-2"></i>
+                <span class="sidebar-link-text">Overview</span>
+            </a>
+        </nav>
+
+        <!-- APPLICATIONS -->
+        <span class="sidebar-section-label">Applications</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link active" data-page="manage-apps">
+                <i class="fas fa-cube"></i>
+                <span class="sidebar-link-text">Manage Applications</span>
+                <span class="sidebar-link-count" id="cnt-apps" style="background:#10b981;color:#fff">1</span>
+            </a>
+        </nav>
+
+        <!-- LICENSING & CONTROL -->
+        <span class="sidebar-section-label">Licensing &amp; Control</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link" data-page="licenses">
+                <i class="fas fa-key"></i>
+                <span class="sidebar-link-text">Licenses</span>
+                <span class="sidebar-link-count" id="cnt-licenses">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="subscriptions">
+                <i class="fas fa-layer-group"></i>
+                <span class="sidebar-link-text">Subscriptions</span>
+                <span class="sidebar-link-count" id="cnt-subs">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="variables">
+                <i class="fas fa-database"></i>
+                <span class="sidebar-link-text">Variables</span>
+                <span class="sidebar-link-count" id="cnt-vars">0</span>
+            </a>
+        </nav>
+
+        <!-- SECURITY & TELEMETRY -->
+        <span class="sidebar-section-label">Security &amp; Telemetry</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link" data-page="users">
+                <i class="fas fa-users"></i>
+                <span class="sidebar-link-text">Users</span>
+                <span class="sidebar-link-count" id="cnt-users">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="sessions">
+                <i class="fas fa-satellite-dish"></i>
+                <span class="sidebar-link-text">Sessions</span>
+                <span class="sidebar-link-count" id="cnt-sessions">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="logs">
+                <i class="fas fa-terminal"></i>
+                <span class="sidebar-link-text">Logs</span>
+                <span class="sidebar-link-count" id="cnt-logs">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="security">
+                <i class="fas fa-shield-check"></i>
+                <span class="sidebar-link-text">Security</span>
+                <span class="sidebar-link-count" id="cnt-sec">0</span>
+            </a>
+        </nav>
+
+        <!-- PARTNERS & DEV -->
+        <span class="sidebar-section-label">Partners &amp; Dev</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link" data-page="resellers">
+                <i class="fas fa-people-arrows"></i>
+                <span class="sidebar-link-text">Resellers</span>
+                <span class="sidebar-link-count" id="cnt-resellers">0</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="api">
+                <i class="fas fa-code"></i>
+                <span class="sidebar-link-text">API Docs</span>
+            </a>
+        </nav>
+
+        <!-- SYSTEM -->
+        <span class="sidebar-section-label">System</span>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link" data-page="settings">
+                <i class="fas fa-gear"></i>
+                <span class="sidebar-link-text">Settings</span>
+            </a>
+        </nav>
+
+    </div><!-- /.sidebar-body -->
+
+    <!-- Admin link (owner only, hidden by default) -->
+    <div class="sidebar-body" style="padding-bottom:0">
+        <span class="sidebar-section-label">Admin</span>
+        <nav class="sidebar-nav">
+            <a href="admin.html" class="sidebar-link admin-only" style="display:none">
+                <i class="fas fa-crown" style="color:#22c55e"></i>
+                <span class="sidebar-link-text" style="color:#22c55e">Admin Panel</span>
+            </a>
+        </nav>
+    </div>
+    <!-- User footer -->
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar user-avatar-initials">?</div>
+            <div class="sidebar-user-info">
+                <span class="sidebar-user-name" id="dashUserName">Loading…</span>
+                <span class="sidebar-user-role" id="dashUserRole"><i class="fas fa-circle" style="font-size:.4rem"></i> User</span>
+            </div>
+            <button onclick="dashLogout()" class="sidebar-user-logout" title="Logout" aria-label="Logout" style="background:none;border:none;cursor:pointer;color:inherit">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+            </button>
+        </div>
+    </div>
+
+</aside><!-- /.sidebar -->
+
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+                <span>modz-squad</span>
+                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-current" id="breadcrumbCurrent">overview</span>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-search">
+                <i class="fas fa-search" style="font-size:.7rem"></i>
+                <input type="text" placeholder="Search..." aria-label="Search">
+            </div>
+            <span class="status-badge status-online">NODE ONLINE</span>
+            <span class="status-badge status-enc"><i class="fas fa-lock" style="font-size:.55rem"></i> AES-256-GCM</span>
+
+            <!-- NOTIFICATIONS BELL -->
+            <div class="notif-wrap" id="notifWrap">
+                <button class="notif-bell-btn has-unread" id="notifBell" aria-label="Notifications" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-count" id="notifCount">0</span>
+                </button>
+
+                <!-- DROPDOWN -->
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header">
+                        <div class="notif-header-title">
+                            <i class="fas fa-bell"></i>
+                            Notifications
+                            <span class="notif-unread-badge" id="notifUnreadBadge">0 new</span>
+                        </div>
+                        <button class="notif-mark-all" id="notifMarkAll">
+                            Mark all read
+                        </button>
+                    </div>
+                    <div class="notif-list" id="notifList">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="notif-footer">
+                        <a href="#" data-page="logs" id="notifViewAll">View all activity logs →</a>
+                    </div>
+                </div>
+            </div>
+
+            <a href="index.html" class="topbar-icon-btn" title="Back to site" aria-label="Back to site">
+                <i class="fas fa-arrow-up-right-from-square"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- PAGES WRAP -->
+    <div class="pages-wrap">
+
+        <!-- ================================================
+             PAGE: MANAGE APPLICATIONS (KeyAuth / Wanted Zone Style)
+             ================================================ -->
+        <div class="page active" id="page-manage-apps">
+            
+            <!-- Page Header -->
+            <div class="manage-apps-header">
+                <div class="apps-breadcrumb">
+                    <i class="fas fa-home"></i> <span>Manage Apps</span> <i class="fas fa-chevron-right" style="font-size:0.65rem;opacity:0.5"></i> Current: <span class="app-tag-badge" id="keyauthCurrentTag">arena-system</span>
+                </div>
+                <h1 class="apps-main-title">
+                    <i class="fas fa-cube" style="color:#8b5cf6"></i> Manage Applications - <span id="keyauthAppTitle">arena-system</span>
+                </h1>
+                <p class="apps-sub-text">This is where it all begins. <a href="#" style="color:#3b82f6;text-decoration:none">Learn More</a>.</p>
+            </div>
+
+            <!-- Credentials Box -->
+            <div class="keyauth-credentials-card">
+                <div class="card-header-sub">
+                    <h2>Application Credentials</h2>
+                    <p>Simply replace the placeholder code in the example with these</p>
+                </div>
+
+                <!-- Language Tabs -->
+                <div class="lang-tabs-bar" id="langTabsBar">
+                    <button class="lang-tab active" data-lang="cpp" onclick="switchKeyauthLang('cpp')">C++</button>
+                    <button class="lang-tab" data-lang="csharp" onclick="switchKeyauthLang('csharp')">C#</button>
+                    <button class="lang-tab" data-lang="python" onclick="switchKeyauthLang('python')">Python</button>
+                    <button class="lang-tab" data-lang="php" onclick="switchKeyauthLang('php')">PHP</button>
+                    <button class="lang-tab" data-lang="javascript" onclick="switchKeyauthLang('javascript')">JavaScript</button>
+                    <button class="lang-tab" data-lang="java" onclick="switchKeyauthLang('java')">Java</button>
+                    <button class="lang-tab" data-lang="vbnet" onclick="switchKeyauthLang('vbnet')">VB.Net</button>
+                    <button class="lang-tab" data-lang="rust" onclick="switchKeyauthLang('rust')">Rust</button>
+                    <button class="lang-tab" data-lang="go" onclick="switchKeyauthLang('go')">Go</button>
+                    <button class="lang-tab" data-lang="lua" onclick="switchKeyauthLang('lua')">Lua</button>
+                    <button class="lang-tab" data-lang="ruby" onclick="switchKeyauthLang('ruby')">Ruby</button>
+                    <button class="lang-tab" data-lang="perl" onclick="switchKeyauthLang('perl')">Perl</button>
+                </div>
+
+                <!-- Code View Box -->
+                <div class="code-snippet-box">
+                    <pre><code id="keyauthCodeContent">// Loading application credentials...</code></pre>
+                </div>
+
+                <!-- Copy & View Actions -->
+                <div class="code-actions-row">
+                    <button class="btn-copy-creds" id="btnCopyCreds" onclick="copyCredsCode()">
+                        <i class="fas fa-copy"></i> Copy Credentials
+                    </button>
+                    <button class="btn-view-example" id="btnViewExample" onclick="viewLangExample()">
+                        <i class="fas fa-external-link-alt"></i> View <span id="currentLangLabel">C++</span> Example
+                    </button>
+                </div>
+            </div>
+
+            <!-- KeyAuth Action Buttons Row -->
+            <div class="keyauth-actions-bar">
+                <button class="ka-btn ka-btn-blue" onclick="openCreateAppModal()">
+                    <i class="fas fa-plus-circle"></i> Create Application
+                </button>
+                <button class="ka-btn ka-btn-purple" onclick="openRenameAppModal()">
+                    <i class="fas fa-edit"></i> Rename Application
+                </button>
+                <button class="ka-btn ka-btn-orange" id="btnTogglePauseApp" onclick="togglePauseApp()">
+                    <i class="fas fa-pause-circle"></i> Pause Application &amp; Users
+                </button>
+                <button class="ka-btn ka-btn-green" onclick="refreshAppSecret()">
+                    <i class="fas fa-sync-alt"></i> Refresh Application Secret
+                </button>
+                <button class="ka-btn ka-btn-red" onclick="deleteCurrentApp()">
+                    <i class="fas fa-trash-alt"></i> Delete Application
+                </button>
+            </div>
+
+            <!-- Applications List Table -->
+            <div class="card apps-table-card">
+                <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+                    <span class="card-title"><i class="fas fa-list"></i> Your Applications</span>
+                    <span class="badge badge-purple" id="appsCountBadge">1 App</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>APPLICATION NAME</th>
+                                <th>VERSION</th>
+                                <th>OWNER ID</th>
+                                <th>SECRET</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appsTableBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================================================
+             PAGE: OVERVIEW
+             ================================================ -->
+        <div class="page" id="page-overview">
+
+            <!-- Welcome row -->
+            <div class="welcome-row">
+                <div class="welcome-left">
+                    <h1>Welcome back, <span>MasterAdmin</span>
+                        <span class="master-badge" style="margin-left:10px">MASTER ADMIN</span>
+                    </h1>
+                    <p>Zero-Trust license &amp; Cloud Variables system active.</p>
+                </div>
+                <div class="welcome-right">
+                    <span class="status-badge status-online">NODE ONLINE</span>
+                    <span class="status-badge status-enc"><i class="fas fa-lock" style="font-size:.55rem"></i> AES-256-GCM</span>
+                </div>
+            </div>
+
+            <!-- 4 stat cards -->
+            <div class="stat-cards-grid">
+
+                <!-- Total Keys -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">Total Keys</span>
+                        <span class="stat-card-icon"><i class="fas fa-key"></i></span>
+                    </div>
+                    <div class="stat-card-value" id="ov-total-keys">0</div>
+                    <div class="stat-card-meta">
+                        <span class="stat-meta-item">
+                            <span class="dot dot-green"></span>
+                            <span class="stat-meta-val-green" id="ov-active-keys">0</span> Active
+                        </span>
+                        <span class="stat-meta-sep">▸</span>
+                        <span class="stat-meta-item" id="ov-unused-keys">0 Unused</span>
+                        <span class="stat-meta-sep">▸</span>
+                        <span class="stat-meta-item">
+                            <span class="stat-meta-val-red" id="ov-banned-keys">0</span> Banned
+                        </span>
+                    </div>
+                    <a href="#" class="stat-card-link" data-page="licenses">
+                        <span>Manage keys</span>
+                        <i class="fas fa-arrow-up-right"></i>
+                    </a>
+                </div>
+
+                <!-- Online Sessions -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">Online Sessions</span>
+                        <span class="stat-card-icon"><i class="fas fa-wave-square"></i></span>
+                    </div>
+                    <div class="stat-card-value" id="ov-sessions">0</div>
+                    <div class="stat-card-meta" style="justify-content:space-between">
+                        <span>Real-time sessions via Ephemeral Nonce</span>
+                        <span class="heartbeat-badge">Heartbeat OK</span>
+                    </div>
+                    <a href="#" class="stat-card-link" data-page="sessions">
+                        <span>View sessions</span>
+                        <i class="fas fa-arrow-up-right"></i>
+                    </a>
+                </div>
+
+                <!-- Variables -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">Variables</span>
+                        <span class="stat-card-icon"><i class="fas fa-database"></i></span>
+                    </div>
+                    <div class="stat-card-value" id="ov-vars">0</div>
+                    <div class="stat-card-meta" style="justify-content:space-between">
+                        <span>
+                            <span id="ov-secret-vars">0</span> secret vars
+                            <span class="stat-meta-sep" style="margin:0 6px">▸</span>
+                            <span id="ov-switches">0</span> switches
+                        </span>
+                        <span class="ram-badge">RAM 100%</span>
+                    </div>
+                    <a href="#" class="stat-card-link" data-page="variables">
+                        <span>JSON &amp; Offsets</span>
+                        <i class="fas fa-arrow-up-right"></i>
+                    </a>
+                </div>
+
+                <!-- Resellers -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-title">Resellers</span>
+                        <span class="stat-card-icon"><i class="fas fa-people-arrows"></i></span>
+                    </div>
+                    <div class="stat-card-value" id="ov-resellers">0</div>
+                    <div class="stat-card-meta" style="justify-content:space-between">
+                        <span>Allocate key quota</span>
+                        <span style="color:var(--text3);font-family:var(--mono);font-size:.65rem">Resellers</span>
+                    </div>
+                    <a href="#" class="stat-card-link" data-page="resellers">
+                        <span>Grant Quota</span>
+                        <i class="fas fa-arrow-up-right"></i>
+                    </a>
+                </div>
+
+            </div><!-- /.stat-cards-grid -->
+
+            <!-- Quick Actions -->
+            <div class="quick-actions-card">
+                <div class="quick-actions-header">
+                    <i class="fas fa-key"></i>
+                    Quick Actions
+                </div>
+                <div class="quick-action-item" data-page="licenses" id="qa-genkey">
+                    <div class="quick-action-icon"><i class="fas fa-key"></i></div>
+                    <div class="quick-action-info">
+                        <span class="quick-action-name">Generate Key</span>
+                        <span class="quick-action-desc">Single or batch keys</span>
+                    </div>
+                    <i class="fas fa-arrow-up-right quick-action-arrow"></i>
+                </div>
+                <div class="quick-action-item" data-page="variables" id="qa-addvar">
+                    <div class="quick-action-icon"><i class="fas fa-database"></i></div>
+                    <div class="quick-action-info">
+                        <span class="quick-action-name">Add Variable</span>
+                        <span class="quick-action-desc">JSON, Offsets &amp; Switches</span>
+                    </div>
+                    <i class="fas fa-arrow-up-right quick-action-arrow"></i>
+                </div>
+                <div class="quick-action-item" data-page="resellers" id="qa-quota">
+                    <div class="quick-action-icon"><i class="fas fa-people-arrows"></i></div>
+                    <div class="quick-action-info">
+                        <span class="quick-action-name">Grant Quota</span>
+                        <span class="quick-action-desc">Allocate key quota</span>
+                    </div>
+                    <i class="fas fa-arrow-up-right quick-action-arrow"></i>
+                </div>
+            </div>
+
+        </div><!-- /#page-overview -->
+
+
+        <!-- ================================================
+             PAGE: LICENSES
+             ================================================ -->
+        <div class="page" id="page-licenses">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Licenses</h1>
+                    <p>Generate, manage and revoke license keys</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-ghost" id="toggleGenPanel">
+                        <i class="fas fa-sliders"></i> Configure
+                    </button>
+                    <button class="btn-primary" id="openGenModal">
+                        <i class="fas fa-plus"></i> Generate Keys
+                    </button>
+                </div>
+            </div>
+
+            <!-- Generate panel -->
+            <div class="gen-panel" id="genPanel">
+
+                <!-- LEVEL SELECTOR -->
+                <div style="margin-bottom:16px">
+                    <div style="font-size:.62rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px">
+                        Key Level / Tier
+                    </div>
+                    <div class="level-selector" id="levelSelector">
+                        <button class="level-btn" data-level="Standard" data-prefix="𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-">
+                            <span class="level-btn-icon">🔑</span>
+                            <span class="level-btn-name">Standard</span>
+                            <span class="level-btn-sub">Basic access</span>
+                        </button>
+                        <button class="level-btn active" data-level="Premium" data-prefix="𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-">
+                            <span class="level-btn-icon">⭐</span>
+                            <span class="level-btn-name">Premium</span>
+                            <span class="level-btn-sub">Full features</span>
+                        </button>
+                        <button class="level-btn" data-level="Extreme" data-prefix="𝐗𝐓𝐑𝐄𝐌-">
+                            <span class="level-btn-icon">⚡</span>
+                            <span class="level-btn-name">Extreme</span>
+                            <span class="level-btn-sub">High priority</span>
+                        </button>
+                        <button class="level-btn" data-level="Complex" data-prefix="𝐂𝐎𝐌𝐏𝐋-">
+                            <span class="level-btn-icon">💎</span>
+                            <span class="level-btn-name">Complex</span>
+                            <span class="level-btn-sub">Max security</span>
+                        </button>
+                        <button class="level-btn level-custom" data-level="Custom" data-prefix="">
+                            <span class="level-btn-icon">✏️</span>
+                            <span class="level-btn-name">Custom</span>
+                            <span class="level-btn-sub">Your prefix</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KEY PREVIEW -->
+                <div class="key-preview-wrap" id="keyPreviewWrap">
+                    <span style="font-size:.62rem;color:var(--text3);font-family:var(--mono);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:1px">Preview</span>
+                    <div class="key-preview" id="keyPreview">𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-AB45F-REH54-XK92M-7PL3N</div>
+                    <button class="key-preview-refresh" id="keyPreviewRefresh" title="Regenerate preview">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+
+                <div class="gen-panel-grid" style="margin-top:14px">
+                    <div class="gen-field">
+                        <label>Quantity</label>
+                        <input type="number" class="gen-input" id="genQty" value="1" min="1" max="500">
+                    </div>
+                    <div class="gen-field">
+                        <label>Duration</label>
+                        <select class="gen-input gen-select" id="genDuration">
+                            <option>1 Day</option>
+                            <option>7 Days</option>
+                            <option selected>30 Days</option>
+                            <option>90 Days</option>
+                            <option>1 Year</option>
+                            <option>Lifetime</option>
+                        </select>
+                    </div>
+                    <div class="gen-field" id="customPrefixField" style="display:none">
+                        <label>Custom Prefix</label>
+                        <input type="text" class="gen-input" id="genPrefix" placeholder="𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-" value="𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-">
+                    </div>
+                    <div class="gen-field">
+                        <label>Segment Length</label>
+                        <select class="gen-input gen-select" id="genSegLen">
+                            <option value="4">4 chars (XXXX)</option>
+                            <option value="5" selected>5 chars (XXXXX)</option>
+                            <option value="6">6 chars (XXXXXX)</option>
+                        </select>
+                    </div>
+                    <div class="gen-field">
+                        <label>Char Set</label>
+                        <select class="gen-input gen-select" id="genCharSet">
+                            <option value="alphanum">Letters + Numbers</option>
+                            <option value="upper">UPPERCASE Only</option>
+                            <option value="lower">lowercase only</option>
+                            <option value="numbers">Numbers Only</option>
+                            <option value="hex">Hex (0-9, A-F)</option>
+                        </select>
+                    </div>
+                    <div class="gen-field">
+                        <label>Segments</label>
+                        <select class="gen-input gen-select" id="genSegCount">
+                            <option value="3">3 segments</option>
+                            <option value="4" selected>4 segments</option>
+                            <option value="5">5 segments</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- hidden level input -->
+                <input type="hidden" id="genLevel" value="Premium">
+                <input type="hidden" id="genActivePrefixHidden" value="𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-">
+
+                <div style="display:flex;gap:8px;margin-top:14px">
+                    <button class="btn-primary" id="doGenerate">
+                        <i class="fas fa-key"></i> Generate Keys
+                    </button>
+                    <button class="btn-ghost" id="closeGenPanel">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fas fa-search" style="font-size:.7rem;flex-shrink:0"></i>
+                        <input type="text" placeholder="Search key, user..." id="searchLicenses" aria-label="Search licenses">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="active">Active</button>
+                        <button class="filter-tab" data-filter="unused">Unused</button>
+                        <button class="filter-tab" data-filter="expired">Expired</button>
+                        <button class="filter-tab" data-filter="banned">Banned</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" aria-label="Select all" id="chkAllLic"></th>
+                                <th>License Key</th>
+                                <th>User</th>
+                                <th>Level</th>
+                                <th>Duration</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licensesBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="licensesEmpty" style="display:none">
+                    <i class="fas fa-key"></i>
+                    <p>No licenses found. Generate your first key above.</p>
+                </div>
+            </div>
+        </div><!-- /#page-licenses -->
+
+
+        <!-- ================================================
+             PAGE: USERS
+             ================================================ -->
+        <div class="page" id="page-users">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Users</h1>
+                    <p>Manage authenticated users and their access</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-ghost"><i class="fas fa-file-export"></i> Export</button>
+                    <button class="btn-primary" id="openAddUserModal">
+                        <i class="fas fa-user-plus"></i> Add User
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fas fa-search" style="font-size:.7rem;flex-shrink:0"></i>
+                        <input type="text" placeholder="Search username, HWID, IP..." id="searchUsers" aria-label="Search users">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="active">Active</button>
+                        <button class="filter-tab" data-filter="banned">Banned</button>
+                        <button class="filter-tab" data-filter="expired">Expired</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" aria-label="Select all" id="chkAllUsers"></th>
+                                <th>User</th>
+                                <th>License Key</th>
+                                <th>HWID</th>
+                                <th>IP Address</th>
+                                <th>Level</th>
+                                <th>Last Login</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="usersEmpty" style="display:none">
+                    <i class="fas fa-users"></i>
+                    <p>No users registered yet.</p>
+                </div>
+            </div>
+        </div><!-- /#page-users -->
+
+
+        <!-- ================================================
+             PAGE: SUBSCRIPTIONS
+             ================================================ -->
+        <div class="page" id="page-subscriptions">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Subscriptions</h1>
+                    <p>Subscription tiers and plan management</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-primary" id="openAddSubModal">
+                        <i class="fas fa-plus"></i> New Tier
+                    </button>
+                </div>
+            </div>
+            <div class="panel-card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tier Name</th>
+                                <th>Duration</th>
+                                <th>Price</th>
+                                <th>Active Keys</th>
+                                <th>HWID Lock</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /#page-subscriptions -->
+
+
+        <!-- ================================================
+             PAGE: VARIABLES
+             ================================================ -->
+        <div class="page" id="page-variables">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Cloud Variables</h1>
+                    <p>Store and sync encrypted variables remotely</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-primary" id="openAddVarModal">
+                        <i class="fas fa-plus"></i> Add Variable
+                    </button>
+                </div>
+            </div>
+            <div class="panel-card">
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fas fa-search" style="font-size:.7rem;flex-shrink:0"></i>
+                        <input type="text" placeholder="Search variable name..." aria-label="Search variables">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active">All</button>
+                        <button class="filter-tab">Secret</button>
+                        <button class="filter-tab">Switches</button>
+                        <button class="filter-tab">JSON</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Value</th>
+                                <th>Encrypted</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="varsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /#page-variables -->
+
+
+        <!-- ================================================
+             PAGE: SESSIONS
+             ================================================ -->
+        <div class="page" id="page-sessions">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Sessions</h1>
+                    <p>Real-time active sessions via Ephemeral Nonce</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-danger" id="killAllSessions">
+                        <i class="fas fa-power-off"></i> Kill All
+                    </button>
+                </div>
+            </div>
+            <div class="panel-card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>IP Address</th>
+                                <th>HWID</th>
+                                <th>Nonce</th>
+                                <th>Started</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessionsBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="sessionsEmpty">
+                    <i class="fas fa-satellite-dish"></i>
+                    <p>No active sessions. All quiet.</p>
+                </div>
+            </div>
+        </div><!-- /#page-sessions -->
+
+
+        <!-- ================================================
+             PAGE: LOGS
+             ================================================ -->
+        <div class="page" id="page-logs">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Activity Logs</h1>
+                    <p>Full audit trail of all system events</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-ghost"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn-ghost"><i class="fas fa-download"></i> Export</button>
+                </div>
+            </div>
+            <div class="panel-card">
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <i class="fas fa-search" style="font-size:.7rem;flex-shrink:0"></i>
+                        <input type="text" placeholder="Search logs..." aria-label="Search logs">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active">All</button>
+                        <button class="filter-tab">Auth</button>
+                        <button class="filter-tab">Error</button>
+                        <button class="filter-tab">Security</button>
+                        <button class="filter-tab">Admin</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>User</th>
+                                <th>IP</th>
+                                <th>Details</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /#page-logs -->
+
+
+        <!-- ================================================
+             PAGE: SECURITY
+             ================================================ -->
+        <div class="page" id="page-security">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Security</h1>
+                    <p>HWID management, IP blacklist, and threat detection</p>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                <!-- IP Blacklist -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div class="panel-card-title"><i class="fas fa-ban"></i> IP Blacklist</div>
+                        <div class="panel-card-actions">
+                            <button class="btn-primary btn-sm" id="openBanIpModal" style="padding:5px 10px;font-size:.7rem">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>IP Address</th><th>Reason</th><th>Banned At</th><th>Actions</th></tr></thead>
+                            <tbody id="blacklistBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="blacklistEmpty">
+                        <i class="fas fa-shield-check"></i>
+                        <p>No IPs blacklisted.</p>
+                    </div>
+                </div>
+
+                <!-- HWID Bans -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <div class="panel-card-title"><i class="fas fa-fingerprint"></i> HWID Bans</div>
+                        <div class="panel-card-actions">
+                            <button class="btn-primary btn-sm" style="padding:5px 10px;font-size:.7rem">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>HWID Hash</th><th>User</th><th>Reason</th><th>Actions</th></tr></thead>
+                            <tbody id="hwidBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="hwidEmpty">
+                        <i class="fas fa-fingerprint"></i>
+                        <p>No HWID bans active.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat log -->
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <div class="panel-card-title"><i class="fas fa-triangle-exclamation"></i> Threat Events</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Time</th><th>Threat</th><th>Source IP</th><th>User</th><th>Severity</th><th>Action Taken</th></tr></thead>
+                        <tbody id="threatsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /#page-security -->
+
+
+        <!-- ================================================
+             PAGE: RESELLERS
+             ================================================ -->
+        <div class="page" id="page-resellers">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Resellers</h1>
+                    <p>Partner accounts and key quota allocation</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-primary" id="openAddResellerModal">
+                        <i class="fas fa-user-plus"></i> Add Reseller
+                    </button>
+                </div>
+            </div>
+            <div class="panel-card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reseller</th>
+                                <th>Email</th>
+                                <th>Quota Used</th>
+                                <th>Quota Total</th>
+                                <th>Keys Sold</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resellersBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="resellersEmpty">
+                    <i class="fas fa-people-arrows"></i>
+                    <p>No resellers added yet.</p>
+                </div>
+            </div>
+        </div><!-- /#page-resellers -->
+
+
+        <!-- ================================================
+             PAGE: API DOCS
+             ================================================ -->
+        <div class="page" id="page-api">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>API Reference</h1>
+                    <p>REST API docs, SDK integration, and live key management for Arena System</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-ghost" id="copyApiKeyBtn"><i class="fas fa-copy"></i> Copy API Key</button>
+                    <button class="btn-primary" id="regenApiKeyBtn"><i class="fas fa-rotate"></i> Regenerate Key</button>
+                </div>
+            </div>
+
+            <!-- API KEY HERO CARD -->
+            <div class="panel-card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(34,197,94,.07) 0%,rgba(15,15,24,.95) 100%);border-color:rgba(34,197,94,.25);">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 0">
+                    <div style="width:42px;height:42px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:10px;display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 20px rgba(34,197,94,.35)">
+                        <i class="fas fa-key" style="color:#fff;font-size:.95rem"></i>
+                    </div>
+                    <div style="flex:1;min-width:220px">
+                        <div style="font-size:.62rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:4px">Your Live API Key</div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input id="apiKeyDisplay" type="password" readonly
+                                value="zs_live_xK9mP3qR7vN2wL5tJ8sY4hD1cA6bF0eG"
+                                style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:9px 14px;color:var(--text);font-family:var(--mono);font-size:.78rem;outline:none;min-width:0">
+                            <button onclick="document.getElementById('apiKeyDisplay').type=document.getElementById('apiKeyDisplay').type==='password'?'text':'password'" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 11px;color:var(--text2);cursor:pointer;font-size:.75rem;white-space:nowrap" title="Show/hide key">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('apiKeyDisplay').value).then(()=>{this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>{this.innerHTML='<i class=\'fas fa-copy\'></i>'},1500)})" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:7px;padding:8px 11px;color:#22c55e;cursor:pointer;font-size:.75rem;white-space:nowrap" title="Copy key">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                        <span style="padding:3px 10px;border-radius:99px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:.62rem;font-weight:800;font-family:var(--mono);letter-spacing:.5px">● LIVE</span>
+                        <span style="font-size:.62rem;color:var(--text3);font-family:var(--mono)">Never expires</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BASE URL + RATE LIMITS -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+                <div class="panel-card" style="padding:14px 16px">
+                    <div style="font-size:.6rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px"><i class="fas fa-link"></i> Base URL</div>
+                    <div style="font-family:var(--mono);font-size:.78rem;color:#22c55e;word-break:break-all">https://api.modzsquad.io/v2</div>
+                </div>
+                <div class="panel-card" style="padding:14px 16px">
+                    <div style="font-size:.6rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px"><i class="fas fa-gauge-high"></i> Rate Limit</div>
+                    <div style="font-family:var(--mono);font-size:.78rem;color:#22c55e">500 req / min</div>
+                    <div style="font-size:.62rem;color:var(--text3);margin-top:2px">Per API key</div>
+                </div>
+                <div class="panel-card" style="padding:14px 16px">
+                    <div style="font-size:.6rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px"><i class="fas fa-shield-halved"></i> Auth Header</div>
+                    <div style="font-family:var(--mono);font-size:.72rem;color:#a78bfa">X-API-Key: zs_live_...</div>
+                </div>
+            </div>
+
+            <!-- SDK QUICK START -->
+            <div class="panel-card" style="margin-bottom:14px">
+                <div class="panel-card-header">
+                    <div class="panel-card-title"><i class="fas fa-rocket"></i> Quick Start — SDK</div>
+                    <div class="panel-card-actions">
+                        <div style="display:flex;gap:6px">
+                            <button class="filter-tab active" onclick="switchSdkTab(this,'csharp')" data-sdk="csharp">C#</button>
+                            <button class="filter-tab" onclick="switchSdkTab(this,'python')" data-sdk="python">Python</button>
+                            <button class="filter-tab" onclick="switchSdkTab(this,'js')" data-sdk="js">Node.js</button>
+                            <button class="filter-tab" onclick="switchSdkTab(this,'curl')" data-sdk="curl">cURL</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="position:relative">
+                    <pre id="sdk-csharp" class="api-code-block"><code><span style="color:#60a5fa">// C# — Arena System SDK</span>
+<span style="color:#22c55e">using</span> ModzSquad;
+
+<span style="color:#22c55e">var</span> client = <span style="color:#22c55e">new</span> <span style="color:#a78bfa">ModzClient</span>(<span style="color:#86efac">"zs_live_xK9mP3q..."</span>);
+
+<span style="color:#22c55e">var</span> result = <span style="color:#22c55e">await</span> client.Auth.<span style="color:#fbbf24">LoginAsync</span>(<span style="color:#22c55e">new</span> <span style="color:#a78bfa">LoginRequest</span> {
+    LicenseKey = <span style="color:#86efac">"𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-AB45F-REH54-XK92M-7PL3N"</span>,
+    Hwid       = <span style="color:#fbbf24">HwidHelper</span>.<span style="color:#fbbf24">Get</span>(),
+    Version    = <span style="color:#86efac">"1.0.0"</span>
+});
+
+<span style="color:#22c55e">if</span> (result.Success)
+    <span style="color:#fbbf24">Console</span>.<span style="color:#fbbf24">WriteLine</span>(<span style="color:#86efac">$"Welcome {result.User.Username}!"</span>);</code></pre>
+                    <pre id="sdk-python" class="api-code-block" style="display:none"><code><span style="color:#60a5fa"># Python — Arena System SDK</span>
+<span style="color:#22c55e">import</span> modz_squad <span style="color:#22c55e">as</span> zs
+
+client = zs.<span style="color:#a78bfa">ModzClient</span>(<span style="color:#86efac">"zs_live_xK9mP3q..."</span>)
+
+result = client.auth.<span style="color:#fbbf24">login</span>(
+    license_key=<span style="color:#86efac">"𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-AB45F-REH54-XK92M-7PL3N"</span>,
+    hwid=zs.<span style="color:#fbbf24">get_hwid</span>(),
+    version=<span style="color:#86efac">"1.0.0"</span>
+)
+
+<span style="color:#22c55e">if</span> result[<span style="color:#86efac">"success"</span>]:
+    <span style="color:#fbbf24">print</span>(<span style="color:#86efac">f"Welcome {result['user']['username']}!"</span>)</code></pre>
+                    <pre id="sdk-js" class="api-code-block" style="display:none"><code><span style="color:#60a5fa">// Node.js — Arena System SDK</span>
+<span style="color:#22c55e">const</span> { <span style="color:#a78bfa">ModzClient</span> } = <span style="color:#fbbf24">require</span>(<span style="color:#86efac">'modz-squad'</span>);
+
+<span style="color:#22c55e">const</span> client = <span style="color:#22c55e">new</span> <span style="color:#a78bfa">ModzClient</span>(<span style="color:#86efac">'zs_live_xK9mP3q...'</span>);
+
+<span style="color:#22c55e">const</span> result = <span style="color:#22c55e">await</span> client.auth.<span style="color:#fbbf24">login</span>({
+  licenseKey: <span style="color:#86efac">'𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-AB45F-REH54-XK92M-7PL3N'</span>,
+  hwid:       <span style="color:#fbbf24">getHwid</span>(),
+  version:    <span style="color:#86efac">'1.0.0'</span>
+});
+
+<span style="color:#22c55e">if</span> (result.success) console.<span style="color:#fbbf24">log</span>(<span style="color:#86efac">`Welcome ${result.user.username}!`</span>);</code></pre>
+                    <pre id="sdk-curl" class="api-code-block" style="display:none"><code><span style="color:#60a5fa"># cURL — Direct API</span>
+<span style="color:#fbbf24">curl</span> -X POST https://api.modzsquad.io/v2/auth/login \
+  -H <span style="color:#86efac">"X-API-Key: zs_live_xK9mP3q..."</span> \
+  -H <span style="color:#86efac">"Content-Type: application/json"</span> \
+  -d <span style="color:#86efac">'{</span>
+    <span style="color:#86efac">"license_key": "𝐆𝐳𝐞𝐧𝐨𝐌𝐨𝐝𝐳-AB45F-REH54-XK92M-7PL3N",</span>
+    <span style="color:#86efac">"hwid": "abc123def456",</span>
+    <span style="color:#86efac">"version": "1.0.0"</span>
+  <span style="color:#86efac">}'</span></code></pre>
+                    <button onclick="copyCodeBlock()" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 10px;color:var(--text2);cursor:pointer;font-size:.68rem;font-family:var(--mono)">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- ENDPOINTS TABLE -->
+            <div class="panel-card">
+                <div class="panel-card-header">
+                    <div class="panel-card-title"><i class="fas fa-code"></i> All Endpoints</div>
+                    <div class="panel-card-actions">
+                        <div class="filter-tabs" style="gap:4px">
+                            <button class="filter-tab active">All</button>
+                            <button class="filter-tab">Auth</button>
+                            <button class="filter-tab">Licenses</button>
+                            <button class="filter-tab">Users</button>
+                            <button class="filter-tab">Variables</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Body / Params</th><th>Auth</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-green">POST</span></td>
+                                <td class="cell-mono">/auth/login</td>
+                                <td class="cell-dim">Authenticate user with license key</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">license_key, hwid, version</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-green">POST</span></td>
+                                <td class="cell-mono">/auth/logout</td>
+                                <td class="cell-dim">Terminate user session</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">session_token</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-blue">GET</span></td>
+                                <td class="cell-mono">/licenses</td>
+                                <td class="cell-dim">List all license keys with filters</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">?status=active&page=1</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-green">POST</span></td>
+                                <td class="cell-mono">/licenses/generate</td>
+                                <td class="cell-dim">Generate new batch of license keys</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">qty, level, duration, prefix</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-yellow">PATCH</span></td>
+                                <td class="cell-mono">/licenses/:key/ban</td>
+                                <td class="cell-dim">Ban or unban a license key</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">reason, banned (bool)</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-red">DELETE</span></td>
+                                <td class="cell-mono">/licenses/:key</td>
+                                <td class="cell-dim">Permanently delete a license key</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">—</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-blue">GET</span></td>
+                                <td class="cell-mono">/users</td>
+                                <td class="cell-dim">List all registered users</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">?role=user&banned=false</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-yellow">PATCH</span></td>
+                                <td class="cell-mono">/users/:id/ban</td>
+                                <td class="cell-dim">Ban or unban a user</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">reason, hwid_ban (bool)</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-red">DELETE</span></td>
+                                <td class="cell-mono">/users/:id</td>
+                                <td class="cell-dim">Delete a user permanently</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">—</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-blue">GET</span></td>
+                                <td class="cell-mono">/variables</td>
+                                <td class="cell-dim">Retrieve all cloud variables</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">?type=secret</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-green">POST</span></td>
+                                <td class="cell-mono">/variables</td>
+                                <td class="cell-dim">Create or update a cloud variable</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">name, value, type, encrypted</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-blue">GET</span></td>
+                                <td class="cell-mono">/sessions</td>
+                                <td class="cell-dim">List all active sessions</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">?user_id=xyz</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-red">DELETE</span></td>
+                                <td class="cell-mono">/sessions/:id</td>
+                                <td class="cell-dim">Kill a specific session</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">—</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-yellow">PATCH</span></td>
+                                <td class="cell-mono">/security/blacklist/ip</td>
+                                <td class="cell-dim">Add IP to blacklist</td>
+                                <td class="cell-mono" style="font-size:.68rem;color:var(--text3)">ip, reason</td>
+                                <td><span class="badge badge-blue">API KEY</span></td>
+                                <td><span class="badge badge-green">Live</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RESPONSE FORMAT -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+                <div class="panel-card">
+                    <div class="panel-card-header"><div class="panel-card-title"><i class="fas fa-circle-check" style="color:#22c55e"></i> Success Response</div></div>
+                    <pre style="padding:14px 16px;font-family:var(--mono);font-size:.72rem;color:var(--text);line-height:1.7;overflow-x:auto"><code><span style="color:#22c55e">{</span>
+  <span style="color:#60a5fa">"success"</span>: <span style="color:#22c55e">true</span>,
+  <span style="color:#60a5fa">"data"</span>: <span style="color:#22c55e">{</span>
+    <span style="color:#60a5fa">"user"</span>: <span style="color:#22c55e">{</span> <span style="color:#a78bfa">...</span> <span style="color:#22c55e">}</span>,
+    <span style="color:#60a5fa">"token"</span>: <span style="color:#86efac">"session_tok..."</span>,
+    <span style="color:#60a5fa">"expires"</span>: <span style="color:#86efac">"2026-12-31"</span>
+  <span style="color:#22c55e">}</span>,
+  <span style="color:#60a5fa">"timestamp"</span>: <span style="color:#fbbf24">1727964000</span>
+<span style="color:#22c55e">}</span></code></pre>
+                </div>
+                <div class="panel-card">
+                    <div class="panel-card-header"><div class="panel-card-title"><i class="fas fa-circle-xmark" style="color:#ef4444"></i> Error Response</div></div>
+                    <pre style="padding:14px 16px;font-family:var(--mono);font-size:.72rem;color:var(--text);line-height:1.7;overflow-x:auto"><code><span style="color:#ef4444">{</span>
+  <span style="color:#60a5fa">"success"</span>: <span style="color:#22c55e">false</span>,
+  <span style="color:#60a5fa">"error"</span>: <span style="color:#22c55e">{</span>
+    <span style="color:#60a5fa">"code"</span>: <span style="color:#fbbf24">401</span>,
+    <span style="color:#60a5fa">"message"</span>: <span style="color:#86efac">"Invalid license key"</span>,
+    <span style="color:#60a5fa">"type"</span>: <span style="color:#86efac">"AUTH_FAILED"</span>
+  <span style="color:#22c55e">}</span>
+<span style="color:#ef4444">}</span></code></pre>
+                </div>
+            </div>
+        </div><!-- /#page-api -->
+
+
+        <!-- ================================================
+             PAGE: SETTINGS
+             ================================================ -->
+        <div class="page" id="page-settings">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>Settings</h1>
+                    <p>Application configuration, API credentials and security preferences</p>
+                </div>
+                <div class="page-header-right">
+                    <button class="btn-ghost" id="exportConfig">
+                        <i class="fas fa-file-export"></i> Export Config
+                    </button>
+                    <button class="btn-primary" id="saveSettings">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── APP CREDENTIALS (API / SECRET / OWNER ID / VERSION) ── -->
+            <div class="app-config-grid">
+
+                <!-- API KEY -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <i class="fas fa-key"></i>
+                        <span class="config-card-title">API Key</span>
+                        <button class="config-copy-btn" onclick="copyConfigVal('cfg-api-key')" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <span class="config-label">Your application API key — keep it secret</span>
+                        <div class="config-value-wrap">
+                            <i class="fas fa-key"></i>
+                            <input class="config-input masked" id="cfg-api-key"
+                                   type="text" readonly
+                                   value="ak_live_xK9mP3qR7vN2wL5tJ8sY4hD1cA6bF0eG">
+                            <button class="config-toggle-vis" onclick="toggleConfigVis('cfg-api-key', this)" title="Show/hide">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <button class="config-regen-btn" onclick="regenKey('cfg-api-key','ak_live_')">
+                            <i class="fas fa-rotate"></i> Regenerate API Key
+                        </button>
+                        <span class="config-hint">Use this key in your SDK: <code>authx.init("YOUR_API_KEY")</code></span>
+                    </div>
+                </div>
+
+                <!-- SECRET KEY -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <i class="fas fa-lock"></i>
+                        <span class="config-card-title">Secret Key</span>
+                        <button class="config-copy-btn" onclick="copyConfigVal('cfg-secret-key')" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <span class="config-label">Server-side secret — never expose publicly</span>
+                        <div class="config-value-wrap">
+                            <i class="fas fa-lock"></i>
+                            <input class="config-input masked" id="cfg-secret-key"
+                                   type="text" readonly
+                                   value="sk_secret_7Tz2Kw9Xn4Pm1Qs6Vu8Ry3Lf5Jb0Hc">
+                            <button class="config-toggle-vis" onclick="toggleConfigVis('cfg-secret-key', this)" title="Show/hide">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <button class="config-regen-btn" onclick="regenKey('cfg-secret-key','sk_secret_')">
+                            <i class="fas fa-rotate"></i> Regenerate Secret Key
+                        </button>
+                        <span class="config-hint">Used for webhook signature validation and JWT signing.</span>
+                    </div>
+                </div>
+
+                <!-- OWNER ID -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <i class="fas fa-fingerprint"></i>
+                        <span class="config-card-title">Owner ID</span>
+                        <button class="config-copy-btn" onclick="copyConfigVal('cfg-owner-id')" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <span class="config-label">Unique owner identifier for your application</span>
+                        <div class="owner-id-display">
+                            <i class="fas fa-fingerprint"></i>
+                            <span class="owner-id-val" id="cfg-owner-id">OWN-A7F3B2C1D9E8-4K2M</span>
+                        </div>
+                        <button class="config-regen-btn" onclick="regenOwner()">
+                            <i class="fas fa-rotate"></i> Regenerate Owner ID
+                        </button>
+                        <span class="config-hint">This ID is permanent after first deployment — change with caution.</span>
+                    </div>
+                </div>
+
+                <!-- APP VERSION -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <i class="fas fa-code-branch"></i>
+                        <span class="config-card-title">App Version</span>
+                        <button class="config-copy-btn" onclick="copyConfigVal('cfg-version-input')" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <span class="config-label">Current deployed version of your application</span>
+                        <div class="version-display">
+                            <span class="version-num" id="cfg-version-display">v2.6.0</span>
+                            <div>
+                                <div class="version-status">Current Release</div>
+                                <div style="font-size:.6rem;color:var(--text3);font-family:var(--mono);margin-top:2px">
+                                    Updated: <span id="cfg-version-date">2026-10-03</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="config-value-wrap">
+                            <i class="fas fa-tag"></i>
+                            <input class="config-input" id="cfg-version-input"
+                                   type="text" placeholder="e.g. 2.6.1" value="2.6.0"
+                                   oninput="document.getElementById('cfg-version-display').textContent='v'+this.value">
+                        </div>
+                        <span class="config-hint">Clients with lower versions will be forced to update.</span>
+                    </div>
+                </div>
+
+            </div><!-- /.app-config-grid -->
+
+            <!-- ── SECURITY & BEHAVIOUR TOGGLES ── -->
+            <div class="settings-grid">
+
+                <!-- App Behaviour -->
+                <div class="settings-section">
+                    <div class="settings-section-header">Application Behaviour</div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>App Name</label>
+                            <span>Shown in notifications and logs</span>
+                        </div>
+                        <input type="text" class="gen-input" id="cfg-app-name" value="AuthX" style="width:140px">
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>HWID Locking</label>
+                            <span>Bind keys to hardware ID</span>
+                        </div>
+                        <button class="toggle-switch on" id="tog-hwid"
+                                onclick="this.classList.toggle('on');saveToggle('hwid',this)"
+                                aria-label="Toggle HWID Locking"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Anti-Debug</label>
+                            <span>Detect debugger injection</span>
+                        </div>
+                        <button class="toggle-switch on" id="tog-antidebug"
+                                onclick="this.classList.toggle('on');saveToggle('antidebug',this)"
+                                aria-label="Toggle Anti-Debug"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>VM Detection</label>
+                            <span>Block virtual machine users</span>
+                        </div>
+                        <button class="toggle-switch" id="tog-vmdetect"
+                                onclick="this.classList.toggle('on');saveToggle('vmdetect',this)"
+                                aria-label="Toggle VM Detection"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Force Update</label>
+                            <span>Block outdated client versions</span>
+                        </div>
+                        <button class="toggle-switch on" id="tog-forceupdate"
+                                onclick="this.classList.toggle('on');saveToggle('forceupdate',this)"
+                                aria-label="Toggle Force Update"></button>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div class="settings-section">
+                    <div class="settings-section-header">Security</div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Encryption</label>
+                            <span>AES-256-GCM end-to-end</span>
+                        </div>
+                        <span class="badge badge-green">Active</span>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Rate Limiting</label>
+                            <span>Max 100 req/min per IP</span>
+                        </div>
+                        <button class="toggle-switch on" onclick="this.classList.toggle('on')" aria-label="Toggle Rate Limiting"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>2FA Required</label>
+                            <span>Admin two-factor auth</span>
+                        </div>
+                        <button class="toggle-switch on" onclick="this.classList.toggle('on')" aria-label="Toggle 2FA"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>IP Whitelist</label>
+                            <span>Restrict admin access IPs</span>
+                        </div>
+                        <button class="toggle-switch" onclick="this.classList.toggle('on')" aria-label="Toggle IP Whitelist"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Audit Logging</label>
+                            <span>Log all admin actions</span>
+                        </div>
+                        <button class="toggle-switch on" onclick="this.classList.toggle('on')" aria-label="Toggle Audit Logging"></button>
+                    </div>
+                </div>
+
+                <!-- Webhooks -->
+                <div class="settings-section">
+                    <div class="settings-section-header">Webhooks &amp; Integrations</div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Discord Webhook</label>
+                            <span>Login &amp; ban notifications</span>
+                        </div>
+                        <button class="toggle-switch on" onclick="this.classList.toggle('on')" aria-label="Toggle Discord Webhook"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Telegram Bot</label>
+                            <span>Real-time alerts</span>
+                        </div>
+                        <button class="toggle-switch" onclick="this.classList.toggle('on')" aria-label="Toggle Telegram Bot"></button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Webhook URL</label>
+                            <span>Discord / custom endpoint</span>
+                        </div>
+                    </div>
+                    <div style="padding:0 14px 12px">
+                        <div class="config-value-wrap" style="margin-bottom:0">
+                            <i class="fas fa-link" style="font-size:.7rem"></i>
+                            <input class="config-input" type="text" placeholder="https://discord.com/api/webhooks/..." id="cfg-webhook-url">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account / Danger -->
+                <div class="settings-section">
+                    <div class="settings-section-header">Account</div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Username</label>
+                            <span>Dashboard login name</span>
+                        </div>
+                        <input type="text" class="gen-input" value="MasterAdmin" style="width:140px">
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Password</label>
+                            <span>Change your password</span>
+                        </div>
+                        <button class="btn-ghost" style="padding:5px 10px;font-size:.7rem">Change</button>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label>Session Timeout</label>
+                            <span>Auto-logout after inactivity</span>
+                        </div>
+                        <select class="gen-input gen-select" style="width:110px">
+                            <option>30 min</option>
+                            <option selected>1 hour</option>
+                            <option>4 hours</option>
+                            <option>Never</option>
+                        </select>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-info">
+                            <label style="color:var(--red)">Danger Zone</label>
+                            <span>Permanently reset all data</span>
+                        </div>
+                        <button class="btn-danger" style="padding:5px 10px;font-size:.7rem"
+                                onclick="if(confirm('Reset ALL data? This cannot be undone!'))showDashToast('Reset cancelled for demo','error')">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+            </div><!-- /.settings-grid -->
+        </div><!-- /#page-settings -->
+
+    </div><!-- /.pages-wrap -->
+</div><!-- /.main-content -->
+
+
+<!-- ================================================
+     MODALS
+     ================================================ -->
+
+<!-- Generate Keys Modal -->
+<div class="modal-overlay" id="genModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-key"></i> Generate License Keys</h3>
+            <button class="topbar-icon-btn" id="closeGenModal" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>Quantity</label>
+                <input type="number" class="modal-input" id="modalQty" value="1" min="1" max="500">
+            </div>
+            <div class="modal-field">
+                <label>Duration</label>
+                <select class="modal-input gen-select" id="modalDuration">
+                    <option>1 Day</option><option>7 Days</option>
+                    <option selected>30 Days</option><option>90 Days</option>
+                    <option>1 Year</option><option>Lifetime</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Key Prefix</label>
+                <input type="text" class="modal-input" id="modalPrefix" value="ArenaSystem-">
+            </div>
+            <div class="modal-field">
+                <label>Level</label>
+                <select class="modal-input gen-select" id="modalLevel">
+                    <option>Standard</option><option>Premium</option><option>Elite</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" id="cancelGenModal">Cancel</button>
+            <button class="btn-primary" id="confirmGenModal"><i class="fas fa-key"></i> Generate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Add User</h3>
+            <button class="topbar-icon-btn" id="closeAddUserModal" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>Username</label>
+                <input type="text" class="modal-input" id="newUsername" placeholder="username">
+            </div>
+            <div class="modal-field">
+                <label>License Key</label>
+                <input type="text" class="modal-input" id="newUserKey" placeholder="ArenaSystem-XXXX-XXXX-XXXX-XXXX">
+            </div>
+            <div class="modal-field">
+                <label>Email (optional)</label>
+                <input type="email" class="modal-input" id="newUserEmail" placeholder="user@example.com">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" id="cancelAddUserModal">Cancel</button>
+            <button class="btn-primary" id="confirmAddUser"><i class="fas fa-user-plus"></i> Add User</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Variable Modal -->
+<div class="modal-overlay" id="addVarModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-database"></i> Add Variable</h3>
+            <button class="topbar-icon-btn" id="closeAddVarModal" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>Variable Name</label>
+                <input type="text" class="modal-input" id="varName" placeholder="my_variable">
+            </div>
+            <div class="modal-field">
+                <label>Type</label>
+                <select class="modal-input gen-select" id="varType">
+                    <option>String</option><option>Integer</option><option>Boolean</option><option>JSON</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Value</label>
+                <textarea class="modal-input" id="varValue" rows="3" placeholder="Enter value..."></textarea>
+            </div>
+            <div class="modal-field">
+                <label style="display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="varEncrypted" checked>
+                    Encrypt this variable
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" id="cancelAddVarModal">Cancel</button>
+            <button class="btn-primary" id="confirmAddVar"><i class="fas fa-save"></i> Save Variable</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Create Application -->
+<div class="modal-overlay" id="createAppModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle" style="color:#2563eb"></i> Create New Application</h3>
+            <button class="topbar-icon-btn" onclick="closeCreateAppModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>Application Name</label>
+                <input type="text" class="modal-input" id="newAppNameInput" placeholder="e.g. My Cheat App">
+            </div>
+            <div class="modal-field">
+                <label>Version</label>
+                <input type="text" class="modal-input" id="newAppVersionInput" value="1.0" placeholder="1.0">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" onclick="closeCreateAppModal()">Cancel</button>
+            <button class="btn-primary" style="background:#2563eb;border-color:#2563eb" onclick="submitCreateApp()"><i class="fas fa-plus"></i> Create Application</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Rename Application -->
+<div class="modal-overlay" id="renameAppModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit" style="color:#10b981"></i> Rename Application</h3>
+            <button class="topbar-icon-btn" onclick="closeRenameAppModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-field">
+                <label>New Application Name</label>
+                <input type="text" class="modal-input" id="renameAppNameInput" placeholder="e.g. arena-system v2">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" onclick="closeRenameAppModal()">Cancel</button>
+            <button class="btn-primary" style="background:#10b981;border-color:#10b981" onclick="submitRenameApp()"><i class="fas fa-save"></i> Rename</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/main.js"></script>
+<!-- Supabase data-layer DISABLED: dashboard.js talks directly to the local
+     server.js (/api/apps, /api/v1/licenses/generate), which is what the native
+     panel activates keys against. The Supabase gate used a demo-client fallback
+     that "authenticated" everyone but only generated keys inside the browser —
+     the POST to server.js silently 401'd, so keys never persisted. -->
+<!-- <script src="js/supabase-client.js"></script> -->
+<!-- <script src="js/dashboard-supabase.js"></script> -->
+<script src="js/dashboard.js"></script>
+<script>
+/* ============================================================
+   SESSION CHECK — local server.js (/api/me), not Supabase
+   ============================================================ */
+(async function loadSession() {
+    try {
+        const res  = await fetch('/api/me', { credentials: 'same-origin' });
+        const data = await res.json();
+
+        if (!data.authenticated) {
+            /* Not logged in via server.js → send to the server login page */
+            window.location.href = '/login?reason=auth';
+            return;
+        }
+
+        const u = data.user;
+        window.CURRENT_USER = u;
+
+        /* Update sidebar user info */
+        const avatarEl  = document.querySelector('.sidebar-user-avatar');
+        const nameEl    = document.querySelector('.sidebar-user-name');
+        const roleEl    = document.querySelector('.sidebar-user-role');
+        const logoutEl  = document.querySelector('.sidebar-user-logout');
+        const badgeEl   = document.getElementById('sidebarUserRoleBadge');
+        const subEl     = document.getElementById('sidebarUserRoleSub');
+
+        if (avatarEl) {
+            if (u.avatar) {
+                avatarEl.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:9px;object-fit:cover">`;
+            } else {
+                avatarEl.textContent = (u.displayName || 'U')[0].toUpperCase();
+            }
+        }
+        if (nameEl)  nameEl.textContent  = u.displayName || u.email;
+        if (roleEl)  roleEl.innerHTML    = `<i class="fas fa-circle" style="font-size:.4rem"></i> ${u.role === 'owner' ? '👑 Owner' : 'Seller / Dev'}`;
+        if (logoutEl) logoutEl.href = '/auth/logout';
+
+        if (badgeEl) badgeEl.textContent = u.role === 'owner' ? 'OWNER' : 'SELLER';
+        if (subEl) subEl.textContent = u.role === 'owner' ? 'Master Admin • Full access' : 'App Developer • App Access';
+
+        /* Update welcome message */
+        const welcomeH1 = document.querySelector('#page-overview .welcome-left h1 span');
+        if (welcomeH1) welcomeH1.textContent = u.displayName || u.email;
+
+        /* Role-based permissions enforcement */
+        if (u.role === 'owner') {
+            const badge = document.querySelector('.master-badge');
+            if (badge) badge.textContent = '👑 OWNER';
+
+            /* Orange theme for owner */
+            document.documentElement.style.setProperty('--green', '#22c55e');
+            document.documentElement.style.setProperty('--green-dim', 'rgba(34,197,94,.12)');
+            document.documentElement.style.setProperty('--green-border', 'rgba(34,197,94,.3)');
+            document.documentElement.style.setProperty('--green-glow', 'rgba(34,197,94,.2)');
+        } else {
+            /* User role: restricted permissions */
+            const masterBadge = document.querySelector('.master-badge');
+            if (masterBadge) masterBadge.textContent = 'SELLER / DEVELOPER';
+
+            /* Mark owner-only pages with lock tags in sidebar */
+            const ownerPages = ['users', 'settings', 'resellers', 'security'];
+            ownerPages.forEach(p => {
+                const link = document.querySelector(`.sidebar-link[data-page="${p}"]`);
+                if (link && !link.querySelector('.owner-only-tag')) {
+                    const tag = document.createElement('span');
+                    tag.className = 'owner-only-tag';
+                    tag.innerHTML = '<i class="fas fa-lock" style="font-size:0.5rem"></i> OWNER';
+                    link.appendChild(tag);
+                }
+            });
+        }
+
+        /* Show welcome toast & push notification */
+        const params = new URLSearchParams(window.location.search);
+        if (typeof showDashToast === 'function') {
+            const icon = u.role === 'owner' ? '👑' : '🚀';
+            if (params.get('welcome') === '1') {
+                setTimeout(() => {
+                    showDashToast(`${icon} Welcome back, ${u.displayName || u.email}!`, 'success');
+                }, 600);
+            }
+            if (typeof notifOnEvent === 'function') {
+                notifOnEvent('welcome', `Welcome back ${u.displayName || u.email}! Active session as ${u.role.toUpperCase()}`);
+            }
+        }
+
+        // Initialize KeyAuth apps
+        if (typeof window.loadUserApps === 'function') {
+            window.loadUserApps();
+        }
+
+    } catch(e) {
+        console.warn('Session check failed — running in offline/file mode');
+    }
+})();
+</script>
+</body>
+</html>
